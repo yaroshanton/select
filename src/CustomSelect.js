@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./style.css";
 
 const ITEM_HEIGHT = 35;
@@ -35,6 +35,32 @@ const CustomSelect = ({ onChange }) => {
     fetchData();
   }, []);
 
+  const scrollToIndex = useCallback(
+    (index) => {
+      const dropdown = dropdownRef.current;
+      if (!dropdown || index < 0 || index >= options.length) return;
+
+      const itemTop = index * ITEM_HEIGHT;
+      const itemBottom = itemTop + ITEM_HEIGHT;
+      const currentScrollTop = dropdown.scrollTop;
+      const visibleHeight = VISIBLE_ITEMS * ITEM_HEIGHT;
+
+      //for smooth scrolling
+      if (itemTop < currentScrollTop) {
+        dropdown.scrollTo({
+          top: itemTop,
+          behavior: "smooth",
+        });
+      } else if (itemBottom > currentScrollTop + visibleHeight) {
+        dropdown.scrollTo({
+          top: itemBottom - visibleHeight,
+          behavior: "smooth",
+        });
+      }
+    },
+    [options.length]
+  );
+
   useEffect(() => {
     if (isOpen && !!options.length) {
       setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
@@ -43,30 +69,7 @@ const CustomSelect = ({ onChange }) => {
         scrollToIndex(selectedIndex >= 0 ? selectedIndex : 0);
       }, 10);
     }
-  }, [isOpen, options.length, selectedIndex]);
-
-  const scrollToIndex = (index) => {
-    const dropdown = dropdownRef.current;
-    if (!dropdown || index < 0 || index >= options.length) return;
-
-    const itemTop = index * ITEM_HEIGHT;
-    const itemBottom = itemTop + ITEM_HEIGHT;
-    const currentScrollTop = dropdown.scrollTop;
-    const visibleHeight = VISIBLE_ITEMS * ITEM_HEIGHT;
-
-    //for smooth scrolling
-    if (itemTop < currentScrollTop) {
-      dropdown.scrollTo({
-        top: itemTop,
-        behavior: "smooth",
-      });
-    } else if (itemBottom > currentScrollTop + visibleHeight) {
-      dropdown.scrollTo({
-        top: itemBottom - visibleHeight,
-        behavior: "smooth",
-      });
-    }
-  };
+  }, [isOpen, options.length, selectedIndex, scrollToIndex]);
 
   const handleSelect = (index) => {
     setSelectedIndex(index);
